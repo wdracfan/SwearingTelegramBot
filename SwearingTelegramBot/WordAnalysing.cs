@@ -20,7 +20,7 @@ static partial class Processing
 
     private static async Task<string> GetWordFromWiki(string word)
     {
-        const string regexWord = @"(?<=</span><span class=""mw-headline"" id=""Русский"">Русский</span>)[\s\S]*?</td>\s*</tr>\s*</tbody>\s*</table>\s*<p>\s*<b>(.*)</b>";
+        var regexWord = @"(?<=</span><span class=""mw-headline"" id=""Русский"">Русский</span>)[\s\S]*?</td>\s*</tr>\s*</tbody>\s*</table>\s*<p>\s*<b>(.*)</b>";
         var wikiPage = await GetWiktionaryPage(word);
         var t = Regex.Match(wikiPage, regexWord);
         var groups = t.Groups.Values.ToArray();
@@ -30,7 +30,18 @@ static partial class Processing
         }
         catch
         {
-            throw new ArgumentException("Failed to parse wiki");
+            regexWord = @"(?<=</span><span class=""mw-headline"" id=""Русский"">Русский</span>)[\s\S]*?<p>\s*<b>(.*)</b>";
+            wikiPage = await GetWiktionaryPage(word);
+            t = Regex.Match(wikiPage, regexWord);
+            groups = t.Groups.Values.ToArray();
+            try
+            {
+                return groups[1].Value;
+            }
+            catch
+            {
+                throw new ArgumentException("Failed to parse wiki");
+            }
         }
     }
 

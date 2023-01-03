@@ -13,6 +13,27 @@
         var stressedSyllable = await GetStressedSyllable(word);
         var syllsToLeft = stressedSyllable;
         var stressedLetter = await GetStressedLetter(word);
+        if (syllsToLeft > 0)
+        {
+            var previous = syllables[stressedSyllable - 1];
+            var w = syllables.Select(x => new string(x.Where(y => (int)y != 769).ToArray())).ToArray();
+            if ((previous.Length - 1 == GetVowel(previous) && GetVowel(syllables[stressedSyllable]) == 0) is false)
+            {
+                if (previous.Length - 1 != GetVowel(previous) && previous[GetVowel(previous) + 1] == 'й')
+                {
+                    return "ху" +
+                           previous[(GetVowel(previous) + 1)..] +
+                           string.Join("", w[stressedSyllable..]);
+                }
+                else
+                {
+                    return "хуе" +
+                           previous[(GetVowel(previous) + 1)..] +
+                           string.Join("", w[stressedSyllable..]);
+                }
+            }
+        }
+
         var newLetter = word[stressedLetter] switch
         {
             'а' => 'я',
@@ -21,20 +42,9 @@
             'ы' => 'и',
             _ => word[stressedLetter]
         };
-        if (syllsToLeft > 0)
-        {
-            var previous = syllables[stressedSyllable - 1];
-            var w = syllables.Select(x => new string(x.Where(y => (int)y != 769).ToArray())).ToArray();
-            return "хуе" +
-                   previous[(GetVowel(previous) + 1)..] +
-                   string.Join("", w[stressedSyllable..]);
-        }
-        else
-        {
-            return "ху" +
-                   newLetter +
-                   word[(stressedLetter + 1)..];
-        }
+        return "ху" +
+               newLetter +
+               word[(stressedLetter + 1)..];
     }
 
     private static string TrimBrackets(string word)
