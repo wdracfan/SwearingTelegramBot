@@ -50,6 +50,19 @@ static class Bot
                         update
                     });
             }
+            catch (FormatException e)
+            {
+                await client.SendTextMessageAsync(
+                    update.Message.Chat.Id,
+                    "отъебись))",
+                    cancellationToken: ct);
+                await SendLogs("logs.txt",
+                    new
+                    {
+                        e.Message,
+                        update
+                    });
+            }
             catch (Exception e)
             {
                 await client.SendTextMessageAsync(
