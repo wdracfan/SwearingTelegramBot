@@ -1,7 +1,11 @@
-﻿static partial class Processing
+﻿using System.Diagnostics;
+
+public partial class Processing
 {
-    public static async Task<string> Reduplicate(string word)
+    public static string Reduplicate(string word)
     {
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
         word = TrimBrackets(word);
         if (word.Contains(' '))
         {
@@ -14,13 +18,15 @@
             return checkBased;
         }
 
-        if (word != await GetWord(word))
+        var wordW = new Word(word);
+
+        if (word != wordW.WordW)
         {
             throw new FormatException("Probably plural");
         }
 
-        var right = await SyllablesToRight(word);
-        var left = await SyllablesToLeft(word);
+        var right = wordW.Right;
+        var left = wordW.Left;
         
         //сколько "слогов" справа оставляем
         int syllables = right + 1 + (left >= 2 ? 1 : 0);
@@ -28,7 +34,7 @@
         bool middle = left >= 2 || (left == 1 && right == 0);
 
         var cnt = 0;
-        var arr = await GetWordAsArray(word);
+        var arr = wordW.WordAsArray;
         int index = -1; //индекс буквы, начиная с которой берём концовку
         for (var i = word.Length - 1; i >= 0; i--)
         {
@@ -74,12 +80,17 @@
                 _ => "ху" + word[index]
             };
         }
-          
-        return start + word[(index+1)..];
+        
+        var res = start + word[(index+1)..];
+        
+        time.Stop(); Console.WriteLine($"Reduplicate {time.Elapsed}");
+        return res;
     }
 
     private static string TrimBrackets(string word)
     {
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
         word = word.Trim();
         if (word[^1] == ')')
         {
@@ -95,6 +106,8 @@
                 word = word[..^1];
             }
         }
+        
+        time.Stop(); Console.WriteLine($"TrimBrackets {time.Elapsed}");
         return word;
     }
 }

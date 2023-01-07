@@ -34,7 +34,7 @@ static class Bot
             {
                 await client.SendTextMessageAsync(
                     update.Message.Chat.Id,
-                    await Processing.Reduplicate(update.Message.Text),
+                    Processing.Reduplicate(update.Message.Text),
                     cancellationToken: ct);
             }
             catch (ArgumentException e)

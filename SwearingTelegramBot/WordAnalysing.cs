@@ -1,9 +1,31 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 
-static partial class Processing
+public class Word
 {
-    private static async Task<string> GetWiktionaryPage(string word)
+    private string[] Syllables { get; set; }
+    private string WordWithStress { get; set; }
+    private int StressedLetter { get; set; }
+    public string WordW { get; set; }
+    public List<int> WordAsArray { get; set; }
+    public int Left { get; set; }
+    public int Right { get; set; }
+    
+    public Word(string word)
     {
+        Syllables = GetSyllables(word).Result;
+        WordWithStress = GetWordWithStress(word);
+        StressedLetter = GetStressedLetter(word);
+        WordW = GetWord(word);
+        WordAsArray = GetWordAsArray(word);
+        Left = SyllablesToLeft(word);
+        Right = SyllablesToRight(word);
+    }
+    
+    private async Task<string> GetWiktionaryPage(string word)
+    {
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
         word = word.ToLower();
         var http = new HttpClient();
         try
@@ -16,10 +38,16 @@ static partial class Processing
         {
             throw new ArgumentException("Incorrect word");
         }
+        finally
+        {
+            time.Stop(); Console.WriteLine($"GetWiktionaryPage {time.Elapsed}");
+        }
     }
 
-    private static async Task<string> GetWordFromWiki(string word)
+    private async Task<string> GetWordFromWiki(string word)
     {
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
         var regexWord = @"(?<=</span><span class=""mw-headline"" id=""Русский"">Русский</span>)[\s\S]*?</td>\s*</tr>\s*</tbody>\s*</table>\s*<p>\s*<b>(.*)</b>";
         var wikiPage = await GetWiktionaryPage(word);
         var t = Regex.Match(wikiPage, regexWord);
@@ -30,8 +58,8 @@ static partial class Processing
         }
         catch
         {
-            regexWord = @"(?<=</span><span class=""mw-headline"" id=""Русский"">Русский</span>)[\s\S]*?<p>\s*<b>(.*)</b>";
-            wikiPage = await GetWiktionaryPage(word);
+            regexWord =
+                @"(?<=</span><span class=""mw-headline"" id=""Русский"">Русский</span>)[\s\S]*?<p>\s*<b>(.*)</b>";
             t = Regex.Match(wikiPage, regexWord);
             groups = t.Groups.Values.ToArray();
             try
@@ -43,10 +71,16 @@ static partial class Processing
                 throw new ArgumentException("Failed to parse wiki");
             }
         }
+        finally
+        {
+            time.Stop(); Console.WriteLine($"GetWordFromWiki {time.Elapsed}");
+        }
     }
 
-    private static async Task<string[]> GetSyllables(string word)
+    private async Task<string[]> GetSyllables(string word)
     {
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
         const string regexSyllables = @"((.+)<span.*>.</span>)?(.+)";
         var weirdString = await GetWordFromWiki(word);
         var rest = weirdString;
@@ -67,24 +101,36 @@ static partial class Processing
         }
 
         syllables.Reverse();
+        
+        time.Stop(); Console.WriteLine($"GetSyllables {time.Elapsed}");
         return syllables.ToArray();
     }
 
-    private static async Task<string> GetWordWithStress(string word)
+    private string GetWordWithStress(string word)
     {
-        return string.Join("",await GetSyllables(word));
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
+        var res = string.Join("",Syllables);
+        
+        time.Stop(); Console.WriteLine($"GetWordWithStress {time.Elapsed}");
+        return res;
     }
     
-    private static async Task<int> GetStressedLetter(string word)
+    private int GetStressedLetter(string word)
     {
-        var r = (await GetWordWithStress(word)).IndexOf((char)769);
+        var time = new Stopwatch(); time.Reset(); time.Start();
+
+        var w = WordWithStress;
+        var r = w.IndexOf((char)769);
         if (r > 0)
         {
+            time.Stop(); Console.WriteLine($"GetStressedLetter {time.Elapsed}");
             return r - 1;
         }
-        r = (await GetWordWithStress(word)).IndexOf('ё');
+        r = w.IndexOf('ё');
         if (r > 0)
         {
+            time.Stop(); Console.WriteLine($"GetStressedLetter {time.Elapsed}");
             return r;
         }
         const string vowels = "аеёиоуыэюя";
@@ -92,35 +138,48 @@ static partial class Processing
         {
             if (vowels.Contains(word[i]))
             {
+                time.Stop(); Console.WriteLine($"GetStressedLetter {time.Elapsed}");
                 return i;
             }
         }
-
+        
+        time.Stop(); Console.WriteLine($"GetStressedLetter {time.Elapsed}");
         return -1;
     }
 
-    private static async Task<string> GetWord(string word)
+    private string GetWord(string word)
     {
-        var w = await GetWordWithStress(word);
-        var l = await GetStressedLetter(word);
-        return w.Contains((char)769) ? w[..(l+1)] + w[(l+2)..] : w;
-    }
-
-    private static async Task<List<int>> GetWordAsArray(string word) //1 vowel, 0 consonant, -1 stressed vowel
-    {
-        const string vowels = "аеёиоуыэюя";
-        var res = new List<int>();
-        foreach (var i in await GetWord(word))
-        {
-            res.Add(vowels.Contains(i) ? 1 : 0);
-        }
-        res[await GetStressedLetter(word)] = -1;
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
+        var w = WordWithStress;
+        var l = StressedLetter;
+        var res = w.Contains((char)769) ? w[..(l+1)] + w[(l+2)..] : w;
+        
+        time.Stop(); Console.WriteLine($"GetWord {time.Elapsed}");
         return res;
     }
 
-    private static async Task<int> SyllablesToLeft(string word)
+    private List<int> GetWordAsArray(string word) //1 vowel, 0 consonant, -1 stressed vowel
     {
-        var t = await GetWordAsArray(word);
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
+        const string vowels = "аеёиоуыэюя";
+        var res = new List<int>();
+        foreach (var i in WordW)
+        {
+            res.Add(vowels.Contains(i) ? 1 : 0);
+        }
+        res[StressedLetter] = -1;
+        
+        time.Stop(); Console.WriteLine($"GetWordAsArray {time.Elapsed}");
+        return res;
+    }
+
+    private int SyllablesToLeft(string word)
+    {
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
+        var t = WordAsArray;
         var res = 0;
         foreach (var i in t)
         {
@@ -133,11 +192,18 @@ static partial class Processing
                 break;
             }
         }
+        
+        time.Stop(); Console.WriteLine($"SyllablesToLeft {time.Elapsed}");
         return res;
     }
 
-    private static async Task<int> SyllablesToRight(string word)
+    private int SyllablesToRight(string word)
     {
-        return (await GetSyllables(word)).Length - await SyllablesToLeft(word) - 1;
+        var time = new Stopwatch(); time.Reset(); time.Start();
+        
+        var res = Syllables.Length - Left - 1;
+        
+        time.Stop(); Console.WriteLine($"SyllablesToRight {time.Elapsed}");
+        return res;
     }
 }
