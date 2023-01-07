@@ -1,11 +1,7 @@
-﻿using System.Diagnostics;
-
-public partial class Processing
+﻿public partial class Processing
 {
     public static string Reduplicate(string word)
     {
-        var time = new Stopwatch(); time.Reset(); time.Start();
-        
         word = TrimBrackets(word);
         if (word.Contains(' '))
         {
@@ -82,15 +78,11 @@ public partial class Processing
         }
         
         var res = start + word[(index+1)..];
-        
-        time.Stop(); Console.WriteLine($"Reduplicate {time.Elapsed}");
         return res;
     }
 
     private static string TrimBrackets(string word)
     {
-        var time = new Stopwatch(); time.Reset(); time.Start();
-        
         word = word.Trim();
         if (word[^1] == ')')
         {
@@ -106,8 +98,6 @@ public partial class Processing
                 word = word[..^1];
             }
         }
-        
-        time.Stop(); Console.WriteLine($"TrimBrackets {time.Elapsed}");
         return word;
     }
 }
