@@ -12,13 +12,20 @@ public class Word
     
     public Word(string word)
     {
-        Syllables = GetSyllables(word).Result;
-        WordWithStress = GetWordWithStress(word);
-        StressedLetter = GetStressedLetter(word);
-        WordW = GetWord(word);
-        WordAsArray = GetWordAsArray(word);
-        Left = SyllablesToLeft(word);
-        Right = SyllablesToRight(word);
+        try
+        {
+            Syllables = GetSyllables(word).Result;
+            WordWithStress = GetWordWithStress(word);
+            StressedLetter = GetStressedLetter(word);
+            WordW = GetWord(word);
+            WordAsArray = GetWordAsArray(word);
+            Left = SyllablesToLeft(word);
+            Right = SyllablesToRight(word);
+        }
+        catch (AggregateException ae)
+        {
+            throw new ArgumentException(ae.InnerException?.Message, ae.InnerException);
+        }
     }
     
     private async Task<string> GetWiktionaryPage(string word)

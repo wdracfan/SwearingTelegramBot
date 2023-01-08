@@ -1,6 +1,6 @@
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapGet("/", Bot.TelegramBot);
+app.MapGet("/", Bot.WrapBot);
 
 app.Run();
