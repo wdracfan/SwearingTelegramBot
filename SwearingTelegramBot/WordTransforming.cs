@@ -3,15 +3,16 @@
     public static string Reduplicate(string word)
     {
         word = TrimBrackets(word);
-        if (word.Contains(' '))
-        {
-            throw new ArgumentException("Several words in the input");
-        }
-        
+
         var checkBased = BasedAnswers(word);
         if (checkBased != "")
         {
             return checkBased;
+        }
+        
+        if (word.Contains(' '))
+        {
+            throw new ArgumentException("Several words in the input");
         }
 
         var wordW = new Word(word);
@@ -60,7 +61,8 @@
                 'у' => "хую",
                 'ы' => "хуи",
                 'е' or 'ё' or 'и' or 'э' or 'ю' or 'я' => "ху" + word[index],
-                'й' => "ху" + word[index], 
+                'й' => "ху" + word[index],
+                _ when left >= 2 => "хуе" + word[index],
                 _ when arr[index+1] != 0 => "хуй" + word[index],
                 _ => "хуе" + word[index]
             };
@@ -99,5 +101,57 @@
             }
         }
         return word;
+    }
+    
+    private static bool ContainsLaughter(string input)
+    {
+        return input.Split().Select(IsLaughter).Contains(true);
+    }
+    
+    private static bool IsLaughter(string word)
+    {
+        if (word is "лол" or "кек")
+        {
+            return true;
+        }
+
+        if (word.Length <= 3)
+        {
+            return false;
+        }
+
+        if (word.Contains('х') is false || word.Contains('а') is false)
+        {
+            return false;
+        }
+        
+        var array = word.Select(ch => "вап".Contains(ch) ? 0 : "зхъ".Contains(ch) ? 1 : -1).ToArray();
+        if (array.Contains(-1))
+        {
+            return false;
+        }
+
+        var cnt = 1;
+        for (var i = 1; i < array.Length; i++)
+        {
+            if (array[i] == array[i - 1])
+            {
+                cnt++;
+                if (cnt == 4)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                cnt = 1;
+            }
+        }
+        if (cnt >= 4)
+        {
+            return false;
+        }
+        
+        return true;
     }
 }

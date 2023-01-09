@@ -2,25 +2,27 @@
 
 public class Word
 {
-    private string[] Syllables { get; set; }
-    private string WordWithStress { get; set; }
-    private int StressedLetter { get; set; }
-    public string WordW { get; set; }
-    public List<int> WordAsArray { get; set; }
-    public int Left { get; set; }
-    public int Right { get; set; }
+    private string InputWord { get; }
+    private string[] Syllables { get; }
+    private string WordWithStress { get; }
+    private int StressedLetter { get; }
+    public string WordW { get; }
+    public List<int> WordAsArray { get; }
+    public int Left { get; }
+    public int Right { get; }
     
     public Word(string word)
     {
         try
         {
-            Syllables = GetSyllables(word).Result;
-            WordWithStress = GetWordWithStress(word);
-            StressedLetter = GetStressedLetter(word);
-            WordW = GetWord(word);
-            WordAsArray = GetWordAsArray(word);
-            Left = SyllablesToLeft(word);
-            Right = SyllablesToRight(word);
+            InputWord = word;
+            Syllables = GetSyllables().Result;
+            WordWithStress = GetWordWithStress();
+            StressedLetter = GetStressedLetter();
+            WordW = GetWord();
+            WordAsArray = GetWordAsArray();
+            Left = SyllablesToLeft();
+            Right = SyllablesToRight();
         }
         catch (AggregateException ae)
         {
@@ -28,9 +30,9 @@ public class Word
         }
     }
     
-    private async Task<string> GetWiktionaryPage(string word)
+    private async Task<string> GetWiktionaryPage()
     { 
-        word = word.ToLower();
+        var word = InputWord.ToLower();
         var http = new HttpClient();
         try
         {
@@ -44,10 +46,10 @@ public class Word
         }
     }
 
-    private async Task<string> GetWordFromWiki(string word)
+    private async Task<string> GetWordFromWiki()
     {
         var regexWord = @"(?<=</span><span class=""mw-headline"" id=""Русский"">Русский</span>)[\s\S]*?</td>\s*</tr>\s*</tbody>\s*</table>\s*<p>\s*<b>(.*)</b>";
-        var wikiPage = await GetWiktionaryPage(word);
+        var wikiPage = await GetWiktionaryPage();
         var t = Regex.Match(wikiPage, regexWord);
         var groups = t.Groups.Values.ToArray();
         try
@@ -71,10 +73,10 @@ public class Word
         }
     }
 
-    private async Task<string[]> GetSyllables(string word)
+    private async Task<string[]> GetSyllables()
     {
         const string regexSyllables = @"((.+)<span.*>.</span>)?(.+)";
-        var weirdString = await GetWordFromWiki(word);
+        var weirdString = await GetWordFromWiki();
         var rest = weirdString;
         var syllables = new List<string>();
         try
@@ -95,13 +97,13 @@ public class Word
         return syllables.ToArray();
     }
 
-    private string GetWordWithStress(string word)
+    private string GetWordWithStress()
     {
         var res = string.Join("",Syllables);
         return res;
     }
     
-    private int GetStressedLetter(string word)
+    private int GetStressedLetter()
     {
         var w = WordWithStress;
         var r = w.IndexOf((char)769);
@@ -115,9 +117,9 @@ public class Word
             return r;
         }
         const string vowels = "аеёиоуыэюя";
-        for (var i = 0; i < word.Length; i++)
+        for (var i = 0; i < InputWord.Length; i++)
         {
-            if (vowels.Contains(word[i]))
+            if (vowels.Contains(InputWord[i]))
             {
                 return i;
             }
@@ -126,7 +128,7 @@ public class Word
         return -1;
     }
 
-    private string GetWord(string word)
+    private string GetWord()
     {
         var w = WordWithStress;
         var l = StressedLetter;
@@ -134,7 +136,7 @@ public class Word
         return res;
     }
 
-    private List<int> GetWordAsArray(string word) //1 vowel, 0 consonant, -1 stressed vowel
+    private List<int> GetWordAsArray() //1 vowel, 0 consonant, -1 stressed vowel
     {
         const string vowels = "аеёиоуыэюя";
         var res = new List<int>();
@@ -146,7 +148,7 @@ public class Word
         return res;
     }
 
-    private int SyllablesToLeft(string word)
+    private int SyllablesToLeft()
     {
         var t = WordAsArray;
         var res = 0;
@@ -164,9 +166,9 @@ public class Word
         return res;
     }
 
-    private int SyllablesToRight(string word)
+    private int SyllablesToRight()
     {
-        var res = Syllables.Length - Left - 1;
+        var res = WordAsArray.Count(x => x != 0) - Left - 1;
         return res;
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -115,7 +114,6 @@ static class Bot
     
     private static async Task SendLogs(string path, string error, string word, object obj)
     {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         await using (var sw = new StreamWriter(path, true))
         {
             await sw.WriteLineAsync($@"{{error: ""{error}"", word: ""{word}""}}");
